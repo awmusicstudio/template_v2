@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'app_shell.dart';
 import '../screens/home_screen.dart';
 import '../screens/settings_screen.dart';
+import '../screens/sign_in_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -15,6 +16,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state, child) =>
             AppShell(location: state.uri.toString(), child: child),
         routes: [
+          GoRoute(
+            path: '/sign-in',
+            name: 'sign_in',
+            builder: (context, state) => const SignInScreen(),
+          ),
           GoRoute(
             path: '/',
             name: 'home',
