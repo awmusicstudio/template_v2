@@ -1,5 +1,7 @@
+// lib/features/auth/auth_controller.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:template_v2/services/supabase_service.dart';
 
 enum AuthStatus { unknown, signedOut, signedIn }
 
@@ -13,32 +15,61 @@ class AuthState {
 }
 
 class AuthController extends StateNotifier<AuthState> {
-  AuthController() : super(const AuthState.unknown());
+  AuthController() : super(const AuthState.unknown()) {
+    _init();
+  }
 
-  final SupabaseClient _client = Supabase.instance.client;
+  // Optional: broadcast changes for external listeners (not strictly required)
+  Future<void> _init() async {
+    // If Supabase isn't initialized (dev), treat as signed out
+    if (!SupabaseService().isInitialized) {
+      state = const AuthState.signedOut();
+      return;
+    }
 
-  /// Check existing session and update state.
+    // If Supabase initialized, check session
+    await checkSession();
+  }
+
   Future<void> checkSession() async {
-    final session = _client.auth.currentSession;
-    if (session?.user != null) {
-      state = AuthState.signedIn(session!.user);
-    } else {
+    try {
+      final client = SupabaseService().isInitialized
+          ? Supabase.instance.client
+          : null;
+      if (client == null) {
+        state = const AuthState.signedOut();
+        return;
+      }
+      final session = client.auth.currentSession;
+      if (session?.user != null) {
+        state = AuthState.signedIn(session!.user);
+      } else {
+        state = const AuthState.signedOut();
+      }
+    } catch (e) {
+      // defensive: if anything goes wrong, treat as signed out
       state = const AuthState.signedOut();
     }
   }
 
-  /// Example: anonymous sign-in for local/dev use only.
-  /*   Future<void> signInAnonymous() async {
-    final res = await _client.auth.signInWithProvider(
-      Provider.github,
-    ); // placeholder
-    // Note: Many Supabase projects may not allow true anonymous sign-in.
-    // For now, we attempt a safe call; in a real app you will implement email/magic links or OAuth.
+  /// Placeholder sign-in flow — keep minimal. Replace in next ticket.
+  Future<void> signInPlaceholder() async {
+    // This is intentionally conservative; do not call signIn if Supabase not initialized.
+    if (!SupabaseService().isInitialized) {
+      state = const AuthState.signedOut();
+      return;
+    }
+
+    // In future: implement email/magic link/OAuth. For now just refresh session state.
     await checkSession();
-  }  */
+  }
 
   Future<void> signOut() async {
-    await _client.auth.signOut();
+    try {
+      if (SupabaseService().isInitialized) {
+        await Supabase.instance.client.auth.signOut();
+      }
+    } catch (_) {}
     state = const AuthState.signedOut();
   }
 }
