@@ -1,21 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:template_v2/main.dart';
-import 'package:flutter/material.dart';
 
 void main() {
-  testWidgets('App boots and shows Home screen (body)', (
+  testWidgets('App boots and redirects unsigned users to Sign in', (
     WidgetTester tester,
   ) async {
+    // Pump the real app (uses router + auth redirect).
     await tester.pumpWidget(const ProviderScope(child: MyApp()));
     await tester.pumpAndSettle();
 
-    // There are two "Home" texts (AppBar title + body). Target the one inside the body:
-    final bodyFinder = find.descendant(
-      of: find.byType(Center),
-      matching: find.text('Home'),
-    );
-
-    expect(bodyFinder, findsOneWidget);
+    // App now redirects unsigned users to /sign-in by default in dev (no env/dev.json).
+    expect(find.text('Sign in'), findsOneWidget);
   });
 }
