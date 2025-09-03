@@ -12,26 +12,32 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         children: [
           ListTile(title: const Text('Theme'), subtitle: Text(themeMode.name)),
-          RadioListTile<ThemeMode>(
-            title: const Text('System'),
-            value: ThemeMode.system,
-            groupValue: themeMode,
-            onChanged: (value) =>
-                ref.read(themeModeProvider.notifier).state = value!,
-          ),
-          RadioListTile<ThemeMode>(
-            title: const Text('Light'),
-            value: ThemeMode.light,
-            groupValue: themeMode,
-            onChanged: (value) =>
-                ref.read(themeModeProvider.notifier).state = value!,
-          ),
-          RadioListTile<ThemeMode>(
-            title: const Text('Dark'),
-            value: ThemeMode.dark,
-            groupValue: themeMode,
-            onChanged: (value) =>
-                ref.read(themeModeProvider.notifier).state = value!,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: SegmentedButton<ThemeMode>(
+              segments: const [
+                ButtonSegment(
+                  value: ThemeMode.system,
+                  label: Text('System'),
+                  icon: Icon(Icons.settings_suggest_outlined),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.light,
+                  label: Text('Light'),
+                  icon: Icon(Icons.light_mode_outlined),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.dark,
+                  label: Text('Dark'),
+                  icon: Icon(Icons.dark_mode_outlined),
+                ),
+              ],
+              selected: {themeMode},
+              onSelectionChanged: (selection) {
+                final value = selection.first;
+                ref.read(themeModeProvider.notifier).state = value;
+              },
+            ),
           ),
         ],
       ),
