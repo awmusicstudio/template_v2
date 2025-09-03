@@ -1,0 +1,21 @@
+# FVM Version Cache
+.fvm/
+
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.idea/
+.vscode/
+*.iml
+
+# macOS
+.DS_Store
+
+# Env files (not committed)
+env/dev.json
+.env
