@@ -13,7 +13,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         // pass the current location into the shell via the state
         builder: (context, state, child) =>
-            AppShell(child: child, location: state.uri.toString()),
+            AppShell(location: state.uri.toString(), child: child),
         routes: [
           GoRoute(
             path: '/',
