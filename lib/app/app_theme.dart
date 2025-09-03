@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:template_v2/theme/app_theme_dark.dart';
+import 'package:template_v2/theme/app_theme_light.dart';
 
 class AppTheme {
-  static ThemeData light() {
-    final color = const Color(0xFF0F2536); // primary/nav from STACK.md
-    return ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(seedColor: color),
-      appBarTheme: const AppBarTheme(elevation: 0, centerTitle: true),
-    );
-  }
+  /// Example usage:
+  /// MaterialApp(theme: AppTheme.light(), darkTheme: AppTheme.dark(), ...)
+  static ThemeData light() => buildLightTheme();
+
+  static ThemeData dark() => buildDarkTheme();
 }
