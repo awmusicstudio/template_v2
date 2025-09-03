@@ -8,12 +8,15 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      /* appBar: AppBar(
+        title: const Text('Settings'),
+        backgroundColor: Colors.transparent,
+      ), */
       body: ListView(
         children: [
-          ListTile(title: const Text('Theme'), subtitle: Text(themeMode.name)),
+          ListTile(title: const Text('Theme')),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SegmentedButton<ThemeMode>(
               segments: const [
                 ButtonSegment(
