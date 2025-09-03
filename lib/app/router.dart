@@ -11,7 +11,9 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     routes: [
       ShellRoute(
-        builder: (context, state, child) => AppShell(child: child),
+        // pass the current location into the shell via the state
+        builder: (context, state, child) =>
+            AppShell(child: child, location: state.uri.toString()),
         routes: [
           GoRoute(
             path: '/',
@@ -26,7 +28,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
     ],
-    // Basic error page
     errorBuilder: (context, state) =>
         Scaffold(body: Center(child: Text('Page error: ${state.error}'))),
   );

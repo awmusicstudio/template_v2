@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 
 class AppShell extends StatelessWidget {
   final Widget child;
-  const AppShell({required this.child, super.key});
+  final String location;
+  const AppShell({required this.child, required this.location, super.key});
 
   static const int _desktopBreakpoint = 800;
 
@@ -18,9 +19,7 @@ class AppShell extends StatelessWidget {
             body: Row(
               children: [
                 NavigationRail(
-                  selectedIndex: _indexFromLocation(
-                    GoRouter.of(context).location,
-                  ),
+                  selectedIndex: _indexFromLocation(location),
                   onDestinationSelected: (idx) => _onNavTap(context, idx),
                   labelType: NavigationRailLabelType.all,
                   destinations: const [
@@ -47,7 +46,7 @@ class AppShell extends StatelessWidget {
             appBar: AppBar(title: const Text('template_v2')),
             body: child,
             bottomNavigationBar: BottomNavigationBar(
-              currentIndex: _indexFromLocation(GoRouter.of(context).location),
+              currentIndex: _indexFromLocation(location),
               onTap: (idx) => _onNavTap(context, idx),
               items: const [
                 BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
