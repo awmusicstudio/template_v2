@@ -43,7 +43,6 @@ class AppShell extends StatelessWidget {
         } else {
           // Mobile layout with BottomNavigationBar + AppBar
           return Scaffold(
-            appBar: AppBar(title: const Text('template_v2')),
             body: child,
             bottomNavigationBar: BottomNavigationBar(
               currentIndex: _indexFromLocation(location),
