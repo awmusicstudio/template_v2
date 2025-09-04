@@ -13,3 +13,7 @@ Decision: Add a SupabaseService singleton and a Riverpod AuthController that cen
 ### ADR-005 — Continuous Integration (2025-09-03)
 
 Decision: Add a lightweight GitHub Actions workflow that runs `flutter pub get`, `flutter analyze`, and `flutter test` on PRs and pushes to main. Rationale: protects main branch and enforces basic static checks/tests early without requiring complex infra.
+
+### ADR-007 — Auth flow (2025-09-04)
+
+Decision: Implement a defensive, SDK-version-agnostic email-based auth skeleton in the AuthController with three methods: signInWithEmail, signUpWithEmail, and sendMagicLink. Methods are resilient to missing Supabase initialization and return boolean success flags so the UI can remain simple. Rationale: support multiple SDK versions and allow dev-friendly flows (magic link, email) before committing to a full production sign-in UX.

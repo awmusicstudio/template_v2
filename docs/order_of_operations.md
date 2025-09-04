@@ -27,7 +27,7 @@ Purpose: minimal, safe progression from an empty machine to a working template y
    - Add `env/dev.sample.json` and `AppConfig` loader using `--dart-define-from-file`.
    - Commit: `feat: S05 config`
 
-5a. **S05b - Supabase init**
+5a. **S05b - Supabase init** ✅ DONE
 
 - wire up Supabase + Docker
 
