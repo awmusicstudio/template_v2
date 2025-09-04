@@ -65,7 +65,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign in')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Center(

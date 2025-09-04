@@ -25,5 +25,20 @@ ThemeData buildDarkTheme() {
     colorScheme: scheme,
     scaffoldBackgroundColor: AppColors.kDarkBackground,
     appBarTheme: const AppBarTheme(elevation: 0, centerTitle: true),
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      selectedItemColor: scheme.primary,
+      unselectedItemColor: scheme.onSurfaceVariant,
+      backgroundColor: scheme.surface,
+    ),
+    navigationRailTheme: NavigationRailThemeData(
+      backgroundColor: scheme.surface,
+      indicatorColor: scheme.primary.withOpacity(0.15),
+      selectedIconTheme: const IconThemeData().copyWith(color: scheme.primary),
+      unselectedIconTheme: const IconThemeData().copyWith(
+        color: scheme.onSurfaceVariant,
+      ),
+      selectedLabelTextStyle: TextStyle(color: scheme.primary),
+      unselectedLabelTextStyle: TextStyle(color: scheme.onSurfaceVariant),
+    ),
   );
 }
