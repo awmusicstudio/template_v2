@@ -40,7 +40,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       failMsg = 'Create account failed';
       ok = await notifier.signUpWithEmail(email, pw);
     } else {
-      successMsg = 'Sign-in requested';
+      successMsg = 'Sign-in successful';
       failMsg = 'Sign-in failed';
       ok = await notifier.signInWithEmail(email, pw);
     }
@@ -74,10 +74,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Optional status line to help during dev
-                Text('Status: ${authState.status.name}'),
-                const SizedBox(height: 12),
-
                 Form(
                   key: _formKey,
                   child: Column(

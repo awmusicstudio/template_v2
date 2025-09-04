@@ -51,6 +51,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/sign-in',
+        name: 'sign_in',
+        builder: (context, state) => const SignInScreen(),
+      ),
       ShellRoute(
         builder: (context, state, child) =>
             AppShell(location: state.uri.toString(), child: child),
@@ -64,11 +69,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/settings',
             name: 'settings',
             builder: (context, state) => const SettingsScreen(),
-          ),
-          GoRoute(
-            path: '/sign-in',
-            name: 'sign_in',
-            builder: (context, state) => const SignInScreen(),
           ),
         ],
       ),
