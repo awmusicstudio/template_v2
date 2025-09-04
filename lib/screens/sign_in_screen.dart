@@ -36,7 +36,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     String failMsg = 'Operation failed';
 
     if (_isSignUp) {
-      successMsg = 'Account creation requested';
+      successMsg = 'Account creation successful';
       failMsg = 'Create account failed';
       ok = await notifier.signUpWithEmail(email, pw);
     } else {
@@ -46,9 +46,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     }
 
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(ok ? successMsg : failMsg)));
+
+    // Skip snackbar on successful sign-in
+    if (_isSignUp || !ok) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(ok ? successMsg : failMsg)));
+    }
 
     // If sign-in succeeded, AuthController will update state and router will redirect.
     setState(() => _loading = false);
@@ -62,7 +66,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
+    ref.watch(authControllerProvider);
 
     return Scaffold(
       body: Padding(

@@ -32,7 +32,7 @@ ThemeData buildDarkTheme() {
     ),
     navigationRailTheme: NavigationRailThemeData(
       backgroundColor: scheme.surface,
-      indicatorColor: scheme.primary.withOpacity(0.15),
+      indicatorColor: scheme.primary.withValues(alpha: 0.15),
       selectedIconTheme: const IconThemeData().copyWith(color: scheme.primary),
       unselectedIconTheme: const IconThemeData().copyWith(
         color: scheme.onSurfaceVariant,
