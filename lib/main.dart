@@ -7,12 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:template_v2/app/router.dart';
 import 'package:template_v2/app/app_theme.dart';
 import 'package:template_v2/services/supabase_service.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Dev-only: try to read env/dev.json to initialize Supabase locally if present.
   try {
+    // First: try local file (desktop/dev)
     final file = File('env/dev.json');
     if (await file.exists()) {
       final raw = await file.readAsString();
@@ -21,11 +22,25 @@ void main() async {
       final anon = (map['SUPABASE_ANON_KEY'] as String?) ?? '';
       if (url.isNotEmpty && anon.isNotEmpty) {
         await SupabaseService().init(url: url, anonKey: anon);
-        // don't error if init fails — the app will run without Supabase for local dev
+      }
+    }
+
+    // Fallback: load from bundled asset (mobile)
+    if (!SupabaseService().isInitialized) {
+      try {
+        final raw = await rootBundle.loadString('env/dev.json');
+        final map = jsonDecode(raw) as Map<String, dynamic>;
+        final url = (map['SUPABASE_URL'] as String?) ?? '';
+        final anon = (map['SUPABASE_ANON_KEY'] as String?) ?? '';
+        if (url.isNotEmpty && anon.isNotEmpty) {
+          await SupabaseService().init(url: url, anonKey: anon);
+        }
+      } catch (_) {
+        // ignore missing asset/parse errors
       }
     }
   } catch (_) {
-    // ignore any errors reading / parsing dev env file
+    // ignore errors
   }
 
   runApp(const ProviderScope(child: MyApp()));

@@ -1,80 +1,151 @@
 // lib/features/auth/auth_controller.dart
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:template_v2/services/supabase_service.dart';
 
+/// High-level auth status used by routing and UI
 enum AuthStatus { unknown, signedOut, signedIn }
 
+/// Minimal auth state for the app
 class AuthState {
   final AuthStatus status;
-  final User? user;
-  const AuthState._(this.status, this.user);
-  const AuthState.unknown() : this._(AuthStatus.unknown, null);
-  const AuthState.signedOut() : this._(AuthStatus.signedOut, null);
-  AuthState.signedIn(User user) : this._(AuthStatus.signedIn, user);
+
+  const AuthState({required this.status});
+
+  const AuthState.unknown() : status = AuthStatus.unknown;
+
+  AuthState copyWith({AuthStatus? status}) =>
+      AuthState(status: status ?? this.status);
 }
 
 class AuthController extends StateNotifier<AuthState> {
+  StreamSubscription<dynamic>? _authSub;
+
   AuthController() : super(const AuthState.unknown()) {
-    _init();
+    _initialize();
   }
 
-  // Optional: broadcast changes for external listeners (not strictly required)
-  Future<void> _init() async {
-    // If Supabase isn't initialized (dev), treat as signed out
-    if (!SupabaseService().isInitialized) {
-      state = const AuthState.signedOut();
+  Future<void> _initialize() async {
+    // If Supabase isn't initialized (e.g., local dev without env), we default to signed-out
+    final supabase = SupabaseService();
+    if (!supabase.isInitialized) {
+      state = const AuthState(status: AuthStatus.signedOut);
       return;
     }
 
-    // If Supabase initialized, check session
-    await checkSession();
-  }
+    final client = supabase.client;
+    state = _hasActiveSession(client)
+        ? const AuthState(status: AuthStatus.signedIn)
+        : const AuthState(status: AuthStatus.signedOut);
 
-  Future<void> checkSession() async {
+    // Listen for auth state changes and keep our state in sync
     try {
-      final client = SupabaseService().isInitialized
-          ? Supabase.instance.client
-          : null;
-      if (client == null) {
-        state = const AuthState.signedOut();
-        return;
-      }
-      final session = client.auth.currentSession;
-      if (session?.user != null) {
-        state = AuthState.signedIn(session!.user);
-      } else {
-        state = const AuthState.signedOut();
-      }
-    } catch (e) {
-      // defensive: if anything goes wrong, treat as signed out
-      state = const AuthState.signedOut();
+      _authSub = client.auth.onAuthStateChange.listen((event) {
+        // event is (AuthChangeEvent, Session?) in recent SDKs; stay flexible
+        final next = _hasActiveSession(client)
+            ? const AuthState(status: AuthStatus.signedIn)
+            : const AuthState(status: AuthStatus.signedOut);
+        if (state.status != next.status) {
+          state = next;
+        }
+      });
+    } catch (_) {
+      // Best-effort; if the SDK shape differs, we still operate via explicit methods
     }
   }
 
-  /// Placeholder sign-in flow — keep minimal. Replace in next ticket.
-  Future<void> signInPlaceholder() async {
-    // This is intentionally conservative; do not call signIn if Supabase not initialized.
-    if (!SupabaseService().isInitialized) {
-      state = const AuthState.signedOut();
-      return;
-    }
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
+  }
 
-    // In future: implement email/magic link/OAuth. For now just refresh session state.
-    await checkSession();
+  Future<bool> signInWithEmail(String email, String password) async {
+    final supabase = SupabaseService();
+    if (!supabase.isInitialized) return false;
+    final client = supabase.client;
+    final dynamic auth = client.auth;
+
+    try {
+      try {
+        // Preferred modern API
+        await auth.signInWithPassword(email: email, password: password);
+      } catch (_) {
+        // Fallback for older SDKs
+        await auth.signIn(email: email, password: password);
+      }
+
+      final success = _hasActiveSession(client);
+      state = success
+          ? const AuthState(status: AuthStatus.signedIn)
+          : const AuthState(status: AuthStatus.signedOut);
+      return success;
+    } catch (_) {
+      state = const AuthState(status: AuthStatus.signedOut);
+      return false;
+    }
+  }
+
+  Future<bool> signUpWithEmail(String email, String password) async {
+    final supabase = SupabaseService();
+    if (!supabase.isInitialized) return false;
+    final client = supabase.client;
+    final dynamic auth = client.auth;
+
+    try {
+      try {
+        // Common sign-up API
+        await auth.signUp(email: email, password: password);
+      } catch (_) {
+        // Some SDKs may require a different call shape; if it fails, we'll rely on sign-in attempt
+      }
+
+      // Attempt immediate sign-in to create a session and route to home
+      final signedIn = await signInWithEmail(email, password);
+      if (!signedIn) {
+        state = const AuthState(status: AuthStatus.signedOut);
+      }
+      return signedIn;
+    } catch (_) {
+      state = const AuthState(status: AuthStatus.signedOut);
+      return false;
+    }
   }
 
   Future<void> signOut() async {
+    final supabase = SupabaseService();
+    if (!supabase.isInitialized) {
+      state = const AuthState(status: AuthStatus.signedOut);
+      return;
+    }
     try {
-      if (SupabaseService().isInitialized) {
-        await Supabase.instance.client.auth.signOut();
-      }
-    } catch (_) {}
-    state = const AuthState.signedOut();
+      await supabase.client.auth.signOut();
+    } catch (_) {
+      // ignore sign-out errors and still consider the user signed out
+    }
+    state = const AuthState(status: AuthStatus.signedOut);
+  }
+
+  bool _hasActiveSession(SupabaseClient client) {
+    try {
+      final user = client.auth.currentUser;
+      if (user != null) return true;
+    } catch (_) {
+      // ignore
+    }
+    try {
+      final sessionUser = client.auth.currentSession?.user;
+      return sessionUser != null;
+    } catch (_) {
+      return false;
+    }
   }
 }
 
-// providers
 final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
-  (ref) => AuthController(),
+  (ref) {
+    return AuthController();
+  },
 );
