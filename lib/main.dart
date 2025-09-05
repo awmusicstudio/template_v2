@@ -6,8 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:template_v2/app/router.dart';
 import 'package:template_v2/app/app_theme.dart';
+import 'package:template_v2/app/theme_mode.dart';
 import 'package:template_v2/services/supabase_service.dart';
+import 'package:template_v2/features/onboarding/onboarding_provider.dart';
+import 'package:template_v2/features/onboarding/join_code_service.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,7 +47,28 @@ void main() async {
     // ignore errors
   }
 
-  runApp(const ProviderScope(child: MyApp()));
+  // Seed onboarding completion flag from local storage
+  bool onboardingCompleted = false;
+  OnboardingRole? userRole;
+  try {
+    final sp = await SharedPreferences.getInstance();
+    onboardingCompleted = sp.getBool('onboarding_completed') ?? false;
+    final roleStr = sp.getString('user_role');
+    if (roleStr == 'admin') userRole = OnboardingRole.admin;
+    if (roleStr == 'client') userRole = OnboardingRole.client;
+  } catch (_) {}
+
+  final overrides = [
+    joinCodeServiceProvider.overrideWithValue(
+      SupabaseService().isInitialized
+          ? SupabaseJoinCodeService()
+          : LocalJoinCodeService(),
+    ),
+    onboardingCompletedProvider.overrideWith((ref) => onboardingCompleted),
+    userRoleProvider.overrideWith((ref) => userRole),
+  ];
+
+  runApp(ProviderScope(overrides: overrides, child: const MyApp()));
 }
 
 class MyApp extends ConsumerWidget {
@@ -51,11 +76,13 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp.router(
       title: 'template_v2',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
+      themeMode: themeMode,
       routerConfig: router,
     );
   }

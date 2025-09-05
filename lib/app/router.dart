@@ -5,9 +5,13 @@ import 'package:go_router/go_router.dart';
 
 import '../app/app_shell.dart';
 import '../features/auth/auth_controller.dart';
-import '../screens/home_screen.dart';
-import '../screens/settings_screen.dart';
 import '../screens/sign_in_screen.dart';
+import '../screens/onboarding_screen.dart';
+import '../features/onboarding/onboarding_provider.dart';
+import '../screens/admin/admin_dashboard_screen.dart';
+import '../screens/client/client_dashboard_screen.dart';
+import '../screens/admin/admin_settings_screen.dart';
+import '../screens/client/client_settings_screen.dart';
 
 /// A ChangeNotifier that exposes a safe public `notify()` method to trigger
 /// GoRouter refreshes. This keeps `notifyListeners()` encapsulated.
@@ -40,13 +44,27 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (auth.status == AuthStatus.unknown) return null;
 
       final goingToSignIn = state.uri.toString() == '/sign-in';
+      final goingToOnboarding = state.uri.toString() == '/onboarding';
 
       if (auth.status == AuthStatus.signedOut && !goingToSignIn) {
         return '/sign-in';
       }
 
-      if (auth.status == AuthStatus.signedIn && goingToSignIn) {
-        return '/';
+      if (auth.status == AuthStatus.signedIn) {
+        final onboarded = ref.read(onboardingCompletedProvider);
+        final role = ref.read(userRoleProvider);
+        if (!onboarded && !goingToOnboarding) return '/onboarding';
+        if (onboarded && goingToOnboarding) {
+          if (role == OnboardingRole.admin) return '/admin';
+          if (role == OnboardingRole.client) return '/client';
+          return '/';
+        }
+        // ensure users land on their dashboard if hitting '/' directly
+        if (onboarded && state.uri.toString() == '/') {
+          if (role == OnboardingRole.admin) return '/admin';
+          if (role == OnboardingRole.client) return '/client';
+        }
+        if (goingToSignIn) return '/';
       }
       return null;
     },
@@ -56,6 +74,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'sign_in',
         builder: (context, state) => const SignInScreen(),
       ),
+      GoRoute(
+        path: '/onboarding',
+        name: 'onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       ShellRoute(
         builder: (context, state, child) =>
             AppShell(location: state.uri.toString(), child: child),
@@ -63,12 +86,40 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/',
             name: 'home',
-            builder: (context, state) => const HomeScreen(),
+            builder: (context, state) {
+              final role = ref.read(userRoleProvider);
+              if (role == OnboardingRole.admin) {
+                return const AdminDashboardScreen();
+              }
+              if (role == OnboardingRole.client) {
+                return const ClientDashboardScreen();
+              }
+              return const Scaffold(body: Center(child: Text('Loading...')));
+            },
+          ),
+          GoRoute(
+            path: '/admin',
+            name: 'admin',
+            builder: (context, state) => const AdminDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/client',
+            name: 'client',
+            builder: (context, state) => const ClientDashboardScreen(),
           ),
           GoRoute(
             path: '/settings',
             name: 'settings',
-            builder: (context, state) => const SettingsScreen(),
+            builder: (context, state) {
+              final role = ref.read(userRoleProvider);
+              if (role == OnboardingRole.admin) {
+                return const AdminSettingsScreen();
+              }
+              if (role == OnboardingRole.client) {
+                return const ClientSettingsScreen();
+              }
+              return const Scaffold(body: Center(child: Text('Settings')));
+            },
           ),
         ],
       ),
