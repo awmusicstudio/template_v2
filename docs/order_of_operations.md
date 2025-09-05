@@ -1,80 +1,81 @@
-# ORDER_OF_OPERATIONS — Zero → Template Complete (concise)
+# ORDER_OF_OPERATIONS — template_v2
 
-Purpose: minimal, safe progression from an empty machine to a working template you understand.
+This document lists the canonical work tickets (S01…S12) and short checklists for each. Keep entries brief; use branches `feat/SXX-...` and one ticket per PR.
 
-1. **S01 — Scaffold project** ✅ DONE
+---
 
-   - Create Flutter project (FVM), add `flutter_lints`. Create folders: `lib/app`, `lib/core`, `lib/features`, `env/`.
-   - Commit: `feat: S01 scaffold`
+## S01 — Scaffold ✅ DONE
+- Create Flutter app template
+- .gitignore, env/dev.sample.json, README, basic folder layout
 
-2. **S02 — Router & Shell** ✅ DONE
+## S02 — Router & App Shell ✅ DONE
+- Add go_router, AppShell, Home, Settings routes
+- Responsive scaffolds
 
-   - Add `go_router`. Implement `Home` and `Settings` routes and `app/app.dart` shell.
-   - Commit: `feat: S02 router shell`
+## S03 — State (Riverpod) ✅ DONE
+- Add Riverpod setup and simple provider patterns
+- Ensure providers are testable
 
-3. **S03 — State (Riverpod)** ✅ DONE (but no CounterController yet)
+## S04 — Theme & Tokens ✅ DONE
+- Add tokenized light & dark themes
+- Expose AppTheme.light() / AppTheme.dark()
 
-   - Add Riverpod. Implement one provider + `CounterController` and wire UI.
-   - Add a unit test for provider.
-   - Commit: `feat: S03 state`
+### S04.1 — Auth skeleton (dev-safe) ✅ DONE
+- SupabaseService singleton (init safe)
+- AuthController (StateNotifier) that exposes AuthState
+- SignIn screen (dev-safe) and router redirect to `/sign-in`
 
-4. **S04 — Theme & Tokens** ✅ DONE
+## S05 — Env Config & Local Supabase ✅ DONE
+- env/dev.sample.json; main reads env/dev.json defensively
+- Local Supabase instructions + docs/LOCAL_SUPABASE.md (dev-only)
 
-   - Add `theme.dart` with ColorScheme, light/dark toggle via provider.
-   - Commit: `feat: S04 theme`
+## S06 — Logging & Global Error Handling
+- Add `bootstrap.dart` using `runZonedGuarded` and a `Logger` abstraction
+- Wire a pluggable error reporter (console by default)
 
-5. **S05 — Env Config** ✅ DONE
-   - Add `env/dev.sample.json` and `AppConfig` loader using `--dart-define-from-file`.
-   - Commit: `feat: S05 config`
+## S07 — Local storage adapter (KeyValue v0)
+- Add `KeyValueStore` interface and `SharedPrefsKeyValueStore` implementation
+- Replace direct SharedPreferences usage with adapter where appropriate
 
-5a. **S05b - Supabase init** ✅ DONE
+## S08 — API client (stub)
+- Add a simple ApiClient facade (dio or http) with a `BaseResponse` wrapper
+- Keep it testable and injectable; no network calls in unit tests
 
-- wire up Supabase + Docker
+## S09 — CI & Basic Tests ✅ DONE
+- Add GitHub Actions workflow to run `flutter pub get`, `flutter analyze`, `flutter test` on PRs & pushes to `main`
 
-6. **S06 — Logging & Errors**
+## S10 — Example feature (end-to-end)
+- Small CRUD feature that uses local persistence + optional server sync stub
+- Serves as integration playground for routing, theming, auth, and storage
 
-   - Add `bootstrap.dart` using `runZonedGuarded`, integrate `logger`.
-   - Commit: `feat: S06 logging`
+## S11 — Onboarding & Join Codes (design + implementation) ⚠️ DESIGN COMPLETE — IMPLEMENTATION PENDING
 
-7. **S07 — Local storage adapter (v0)**
+**Status:** The onboarding design (roles, admin/client flows, join-code behavior) is implemented in `nav_arch_plan.md`. The implementation ticket (S11) has been added to this document and remains to be implemented; see checklist below.
+**Rationale:** The nav_arch_plan.md specifies role-aware onboarding and join-code behavior. This ticket implements that design so the app supports Admin and Client onboarding flows and studio linking.
 
-   - Add `KeyValueStore` interface and SharedPreferences impl; tests for read/write.
-   - Commit: `feat: S07 storage`
+Checklist (minimal MVP):
+- [ ] Add `/onboarding` route and `OnboardingScreen` shell
+- [ ] Add `lib/features/onboarding/admin_onboarding.dart` and `client_onboarding.dart` UI
+- [ ] Implement `onboardingProvider` to hold role + form state
+- [ ] Implement a `JoinCodeService` that can generate/verifiy join codes (local mock + Supabase implementation later)
+- [ ] On Admin submit: create (or mock-create) a `studio` entity and persist a `join_code`; show code on success and expose regen in Settings
+- [ ] On Client submit: accept a join code and link the `profile` to the `studio` (local mock for now)
+- [ ] Add unit/widget tests that validate onboarding flows and join-code entry (mock Supabase or KeyValueStore as needed)
 
-8. **S08 — API client (stub)**
+Notes:
+- Treat server-side persistence (Supabase) as a later step; start with a local mock service so UI/tests remain deterministic.
+- Ensure join codes are short, human-friendly (6–8 chars, alphanumeric) and unique in production via server checks.
 
-   - Add `ApiClient` facade (Dio), error mapping, and a mocked endpoint used in a feature test.
-   - Commit: `feat: S08 api`
+## S12 — Local-first DB & Sync (Drift + PowerSync)
+- Add Drift schema for local models and PowerSync scaffolding for syncing with Supabase
+- Prioritize offline-first patterns and conflict resolution
 
-9. **S09 — CI & basic tests** ✅ DONE
+---
 
-   - Add GitHub Action: `flutter analyze` + `flutter test`. Ensure caching.
-   - Commit: `ci: add analyze & test`
+### Change log
+- 2025-09-04: Added explicit S11 ticket for Onboarding & Join Codes (implementation) to align ORDER_OF_OPERATIONS with nav_arch_plan.md and current repo progress.
 
-10. **S10 — Example feature (end-to-end)**
+---
 
-    - Implement a tiny feature using the stack (e.g., Notes persisted via KeyValueStore). Exercise routing, state, storage, and tests.
-    - Commit: `feat: S10 example`
+*End of document.*
 
-11. **S11 — Auth & Local-first plan (design only)**
-
-    - Draft minimal DB schema (Drift) and Supabase RLS sketch. Keep code out of core until verified.
-    - Commit: `chore: S11 auth-plan`
-
-12. **S12 — Drift + PowerSync integration (optional next phase)**
-    - Integrate Drift and PowerSync; implement offline-first sync for example feature. Add tests for sync conflict basics.
-    - Commit: `feat: S12 drift-sync`
-
-**Guidelines**
-
-- One ticket per PR. Keep PRs small and runnable.
-- After each ticket: checklist, patch, commands, test plan, 60-sec recap (per project instructions).
-- Prototype in `/play/` only; move to core with ADR.
-
-**Minimal CLI checklist (local)**
-
-- `fvm flutter run` — run app
-- `fvm flutter test` — run tests
-- `fvm flutter analyze` — linting
-
-_Document created as a concise operational guide. Expand individual steps into tickets when ready._
