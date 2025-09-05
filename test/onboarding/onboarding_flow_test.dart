@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:template_v2/features/onboarding/onboarding_provider.dart';
 import 'package:template_v2/features/onboarding/join_code_service.dart';
 import 'package:template_v2/screens/onboarding_screen.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   setUp(() async {
@@ -15,6 +16,17 @@ void main() {
   testWidgets('Onboarding admin flow creates studio and shows join code', (
     tester,
   ) async {
+    final router = GoRouter(
+      initialLocation: '/onboarding',
+      routes: [
+        GoRoute(path: '/', builder: (context, state) => const SizedBox()),
+        GoRoute(
+          path: '/onboarding',
+          builder: (context, state) => const OnboardingScreen(),
+        ),
+      ],
+    );
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -22,7 +34,7 @@ void main() {
           onboardingCompletedProvider.overrideWith((ref) => false),
           onboardingRoleProvider.overrideWith((ref) => OnboardingRole.admin),
         ],
-        child: const MaterialApp(home: OnboardingScreen()),
+        child: MaterialApp.router(routerConfig: router),
       ),
     );
 

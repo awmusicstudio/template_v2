@@ -38,14 +38,15 @@ class OnboardingController {
 
   /// Marks onboarding as complete and persists flag locally.
   Future<void> completeOnboarding() async {
-    ref.read(onboardingCompletedProvider.notifier).state = true;
-    // Persist flag
+    // Ensure role is set first to avoid flicker on redirect
     try {
       final sp = await SharedPreferences.getInstance();
-      await sp.setBool('onboarding_completed', true);
       final role = ref.read(onboardingRoleProvider);
       await sp.setString('user_role', role.name);
       ref.read(userRoleProvider.notifier).state = role;
+
+      ref.read(onboardingCompletedProvider.notifier).state = true;
+      await sp.setBool('onboarding_completed', true);
     } catch (_) {}
   }
 }

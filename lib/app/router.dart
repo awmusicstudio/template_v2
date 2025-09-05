@@ -28,6 +28,14 @@ final routerRefreshProvider = Provider<RouterRefresh>((ref) {
     notifier.notify();
   });
 
+  // Also refresh when onboarding completion or role changes
+  ref.listen<bool>(onboardingCompletedProvider, (_, __) {
+    notifier.notify();
+  });
+  ref.listen<OnboardingRole?>(userRoleProvider, (_, __) {
+    notifier.notify();
+  });
+
   ref.onDispose(() => notifier.dispose());
   return notifier;
 });

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../features/onboarding/onboarding_provider.dart';
 
@@ -76,7 +77,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           return;
                         }
                         final messenger = ScaffoldMessenger.of(context);
-                        final nav = Navigator.of(context);
+                        final router = GoRouter.of(context);
                         setState(() => _busy = true);
                         try {
                           final code = await onboarding.createStudio(name);
@@ -84,13 +85,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           ref.read(onboardingRoleProvider.notifier).state =
                               OnboardingRole.admin;
                           await onboarding.completeOnboarding();
-                          if (!mounted) return;
                           messenger.showSnackBar(
                             SnackBar(
                               content: Text('Created. Join code: $code'),
                             ),
                           );
-                          nav.pop();
+                          router.go('/');
                         } catch (e) {
                           _showSnack('Failed to create studio: $e');
                         } finally {
@@ -114,19 +114,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     : () async {
                         final code = _codeController.text.trim();
                         final messenger = ScaffoldMessenger.of(context);
-                        final nav = Navigator.of(context);
+                        final router = GoRouter.of(context);
                         setState(() => _busy = true);
                         try {
                           if (code.isNotEmpty) {
                             final name = await onboarding.verifyJoinCode(code);
                             if (name == null) {
-                              if (!mounted) return;
                               messenger.showSnackBar(
                                 const SnackBar(content: Text('Invalid code')),
                               );
                               return;
                             } else {
-                              if (!mounted) return;
                               messenger.showSnackBar(
                                 SnackBar(content: Text('Joined "$name"')),
                               );
@@ -136,8 +134,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           ref.read(onboardingRoleProvider.notifier).state =
                               OnboardingRole.client;
                           await onboarding.completeOnboarding();
-                          if (!mounted) return;
-                          nav.pop();
+                          router.go('/');
                         } catch (e) {
                           _showSnack('Error: $e');
                         } finally {
